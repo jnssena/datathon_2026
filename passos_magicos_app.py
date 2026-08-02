@@ -4,10 +4,8 @@ from pathlib import Path
 import joblib
 import matplotlib
 
-# O Streamlit executa o script em uma thread separada. Se o matplotlib abrir um
-# backend gráfico (Tk no Windows) fora da thread principal, o processo pode
-# morrer sem traceback — e o navegador mostra "Connection error".
-# O backend "Agg" desenha em memória e é o correto para servidor web.
+# forca o backend Agg (sem interface grafica), senao o streamlit as vezes
+# derruba o processo sem erro nenhum e o navegador so mostra Connection error
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
@@ -21,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 # Página
 st.set_page_config(
-    page_title="Passos Mágicos — Risco de Defasagem",
+    page_title="Passos Mágicos - Risco de Defasagem",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -185,35 +183,6 @@ def carregar_artefato():
 
     dados = joblib.load(caminho)
 
-    # O modelo é um objeto serializado pelo scikit-learn. Se a versão que o
-    # gerou for diferente da que está rodando aqui, ele pode carregar mas
-    # quebrar na hora de prever, com um erro difícil de interpretar. Melhor
-    # avisar logo, com instrução do que fazer.
-    versao_treino = dados.get("versoes", {}).get("scikit-learn")
-    versao_atual = sklearn.__version__
-
-    if versao_treino is None:
-        st.warning(
-            "Este modelo foi salvo antes do carimbo de versão. "
-            f"O ambiente atual usa scikit-learn {versao_atual}. "
-            "Se aparecer erro na previsão, gere o modelo de novo pelo notebook."
-        )
-    elif versao_treino != versao_atual:
-        st.error(
-            f"**Incompatibilidade de versão do scikit-learn.**\n\n"
-            f"- Modelo treinado com: `{versao_treino}`\n"
-            f"- Ambiente rodando com: `{versao_atual}`\n\n"
-            "O arquivo `.joblib` guarda o modelo já treinado, e o scikit-learn "
-            "muda a estrutura interna dos objetos entre versões. Resolva de uma "
-            "destas formas:\n\n"
-            f"1. **Regerar o modelo** — abra o notebook usando o mesmo Python "
-            f"deste app e rode até a célula que salva o artefato; ou\n"
-            f"2. **Alinhar a versão** — `pip install scikit-learn=={versao_treino}` "
-            "e reinicie o app.\n\n"
-            "Depois atualize o `requirements.txt` com a versão que ficou."
-        )
-        st.stop()
-
     return dados
 
 
@@ -237,8 +206,8 @@ DESCRICAO_FASE = {
 }
 
 
+# o IAN da base e uma escada, so tem 3 valores possiveis: 2.5 / 5 / 10
 def calcular_ian(defasagem):
-    """O IAN da base é uma escada: 2,5 / 5 / 10 conforme o nível de defasagem."""
     if defasagem <= -3:
         return 2.5
     if defasagem < 0:
@@ -246,8 +215,8 @@ def calcular_ian(defasagem):
     return 10.0
 
 
+# aplica os mesmos encoders do treino e devolve as colunas na ordem certa
 def preparar_entrada(dados: dict) -> pd.DataFrame:
-    """Aplica os mesmos encoders do treino e devolve as colunas na ordem certa."""
     entrada = pd.DataFrame([dados])
     for coluna in variaveis_categoricas:
         le = encoders[coluna]
@@ -258,14 +227,10 @@ def preparar_entrada(dados: dict) -> pd.DataFrame:
     return entrada[ordem_colunas]
 
 
+# calcula o risco de toda a turma de uma vez, fica em cache porque o streamlit
+# reexecuta o script inteiro a cada clique e repontuar 1156 alunos toda hora e lento
 @st.cache_data(show_spinner=False)
 def pontuar_turma(df: pd.DataFrame) -> np.ndarray:
-    """
-    Calcula a probabilidade de risco para um conjunto de alunos.
-
-    Fica em cache porque o Streamlit reexecuta o script inteiro a cada clique,
-    e pontuar 1.156 alunos com 500 árvores toda vez deixa o app lento.
-    """
     base = df.copy()
     for coluna in variaveis_categoricas:
         le = encoders[coluna]
@@ -309,11 +274,11 @@ with st.sidebar:
         st.caption(f"Defasagem calculada: **{defasagem:+d}** fase(s)")
 
     with st.expander("Indicadores", expanded=True):
-        ieg = st.slider("IEG — Engajamento", 0.0, 10.0, 7.5, 0.1)
-        ida = st.slider("IDA — Aprendizagem", 0.0, 10.0, 6.3, 0.1)
-        ipv = st.slider("IPV — Ponto de Virada", 0.0, 10.0, 7.0, 0.1)
-        iaa = st.slider("IAA — Autoavaliação", 0.0, 10.0, 8.3, 0.1)
-        ips = st.slider("IPS — Psicossocial", 0.0, 10.0, 6.8, 0.1)
+        ieg = st.slider("IEG (Engajamento)", 0.0, 10.0, 7.5, 0.1)
+        ida = st.slider("IDA (Aprendizagem)", 0.0, 10.0, 6.3, 0.1)
+        ipv = st.slider("IPV (Ponto de Virada)", 0.0, 10.0, 7.0, 0.1)
+        iaa = st.slider("IAA (Autoavaliação)", 0.0, 10.0, 8.3, 0.1)
+        ips = st.slider("IPS (Psicossocial)", 0.0, 10.0, 6.8, 0.1)
 
     with st.expander("Notas e avaliações", expanded=False):
         nota_mat = st.slider("Nota de Matemática", 0.0, 10.0, 6.2, 0.1)
@@ -347,7 +312,7 @@ st.markdown(f"""
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px">
         <div>
             <h1 class="hero-title">Risco de Defasagem Escolar</h1>
-            <p class="hero-sub">Associação Passos Mágicos — modelo {artefato['nome_modelo']}</p>
+            <p class="hero-sub">Associação Passos Mágicos - modelo {artefato['nome_modelo']}</p>
         </div>
         <div style="display:flex; gap:28px; flex-wrap:wrap">
             <div style="text-align:center">
@@ -411,13 +376,13 @@ with tab1:
             ja_defasado = defasagem < 0
             risco_alto = probabilidade >= corte_padrao
             if ja_defasado and risco_alto:
-                quadrante = "Já defasado · risco alto — atrasado e piorando. Intervenção intensiva."
+                quadrante = "Já defasado, risco alto: atrasado e piorando, intervenção intensiva."
             elif not ja_defasado and risco_alto:
-                quadrante = "Em dia · risco alto — prestes a perder o passo. É aqui que o modelo agrega mais."
+                quadrante = "Em dia, risco alto: prestes a perder o passo, é aqui que o modelo ajuda mais."
             elif ja_defasado:
-                quadrante = "Já defasado · risco baixo — atrasado, mas estável. Reforço continuado."
+                quadrante = "Já defasado, risco baixo: atrasado mas estável, reforço continuado."
             else:
-                quadrante = "Em dia · risco baixo — trajetória saudável. Acompanhamento padrão."
+                quadrante = "Em dia, risco baixo: trajetória saudável, acompanhamento padrão."
 
             st.markdown(f"""
             <div class="card">
@@ -451,7 +416,7 @@ with tab1:
             ax.set_yticks(y)
             ax.set_yticklabels(indicadores)
             ax.set_xlim(0, 11)
-            ax.set_xlabel("nota do indicador (0–10)", fontsize=9)
+            ax.set_xlabel("nota do indicador (0-10)", fontsize=9)
             ax.spines[["top", "right"]].set_visible(False)
             ax.xaxis.grid(True, linestyle="--", alpha=0.35)
             ax.set_axisbelow(True)
@@ -716,8 +681,8 @@ with tab3:
         eixo_x = np.linspace(dados["IEG"].min(), dados["IEG"].max(), 50)
         ax.plot(eixo_x, np.polyval(coeficientes, eixo_x), color=TEMA["laranja"],
                 linewidth=2.5)
-        ax.set_xlabel("IEG — Engajamento", fontsize=9)
-        ax.set_ylabel("IDA — Aprendizagem", fontsize=9)
+        ax.set_xlabel("IEG (Engajamento)", fontsize=9)
+        ax.set_ylabel("IDA (Aprendizagem)", fontsize=9)
         ax.set_title(f"correlação = {dados['IEG'].corr(dados['IDA']):.2f}",
                      fontsize=9, color=TEMA["cinza"])
         ax.spines[["top", "right"]].set_visible(False)
