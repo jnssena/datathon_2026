@@ -1,0 +1,17 @@
+# Dependências da aplicação Streamlit — Datathon Passos Mágicos
+#
+# IMPORTANTE: a versão do scikit-learn precisa ser a MESMA que gerou o
+# .joblib no notebook. Se divergir, o Streamlit Cloud carrega o modelo com
+# aviso de incompatibilidade ou simplesmente falha.
+#
+# Para descobrir as suas versões, rode no terminal do projeto:
+#     pip freeze | grep -Ei "streamlit|pandas|numpy|scikit-learn|matplotlib|seaborn|joblib"
+# e substitua os números abaixo pelo que aparecer.
+
+streamlit==1.37.0
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.1
+matplotlib==3.9.0
+seaborn==0.13.2
+joblib==1.4.2
