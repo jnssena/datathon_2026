@@ -8,10 +8,10 @@
 #     pip freeze | grep -Ei "streamlit|pandas|numpy|scikit-learn|matplotlib|seaborn|joblib"
 # e substitua os números abaixo pelo que aparecer.
 
-streamlit==1.37.0
-pandas==2.2.2
-numpy==1.26.4
-scikit-learn==1.5.1
-matplotlib==3.9.0
+streamlit==1.57.0
+pandas==2.3.2
+numpy==2.3.3
+scikit-learn==1.8.0
+matplotlib==3.10.6
 seaborn==0.13.2
-joblib==1.4.2
+joblib==1.5.3
