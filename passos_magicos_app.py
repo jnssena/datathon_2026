@@ -4,8 +4,6 @@ from pathlib import Path
 import joblib
 import matplotlib
 
-# forca o backend Agg (sem interface grafica), senao o streamlit as vezes
-# derruba o processo sem erro nenhum e o navegador so mostra Connection error
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
@@ -38,7 +36,7 @@ TEMA = {
     "cinza": "#64748B",
 }
 
-# Estrutura da página
+# ESTRUTURA DA PAGINA
 # Cards e Side bar de todas as abas
 st.markdown(f"""
 <style>
@@ -227,8 +225,7 @@ def preparar_entrada(dados: dict) -> pd.DataFrame:
     return entrada[ordem_colunas]
 
 
-# calcula o risco de toda a turma de uma vez, fica em cache porque o streamlit
-# reexecuta o script inteiro a cada clique e repontuar 1156 alunos toda hora e lento
+# calcula o risco de toda a turma de uma vez, fica em cache para manter performance (nao recalcular)
 @st.cache_data(show_spinner=False)
 def pontuar_turma(df: pd.DataFrame) -> np.ndarray:
     base = df.copy()
@@ -332,7 +329,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["Avaliar Aluno", "Priorizar Turma", "Panorama"])
+tab1, tab2, tab3 = st.tabs(["Avaliar Aluno", "Priorizar Turma", "Dashboard"])
 
 # Aba Avaliar Aluno
 with tab1:
@@ -550,7 +547,7 @@ with tab2:
         plt.close()
         st.markdown("</div>", unsafe_allow_html=True)
 
-# Aba Panorama
+# Aba Dashboard
 with tab3:
     anos = sorted(painel["ano"].unique())
     ORDEM_PEDRA = ["Quartzo", "Ágata", "Ametista", "Topázio"]
@@ -692,22 +689,3 @@ with tab3:
         st.pyplot(fig)
         plt.close()
         st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="card">
-        <div style="font-weight:600; color:{TEMA['azul']}; margin-bottom:6px">
-            Sobre o modelo</div>
-        <div style="color:{TEMA['cinza']}; font-size:0.9rem; line-height:1.7">
-            <strong>Alvo:</strong> {artefato['definicao_alvo']}.<br>
-            <strong>Treino:</strong> {artefato['treinado_em']} &nbsp;·&nbsp;
-            <strong>Validação:</strong> {artefato['validado_em']}.<br>
-            <strong>Desempenho:</strong> AUC {metricas['auc']:.3f} &nbsp;·&nbsp;
-            PR-AUC {metricas['pr_auc']:.3f} (aleatório = {metricas['prevalencia']:.3f})
-            &nbsp;·&nbsp; Brier {metricas['brier']:.3f}.<br><br>
-            Este modelo é um <strong>alerta precoce, não um ranking de gravidade</strong>.
-            Alunos já severamente defasados recebem probabilidade baixa por efeito de teto:
-            eles quase não têm para onde piorar. Por isso o resultado deve ser lido junto
-            com o nível de defasagem atual, como na matriz de quadrantes.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
