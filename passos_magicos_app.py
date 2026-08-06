@@ -161,6 +161,14 @@ html, body, [class*="css"] {{font-family: 'Inter', sans-serif !important;}}
     box-shadow: 0 6px 20px rgba(232,124,49,0.4) !important;
 }}
 
+/* Rótulos dos widgets na área principal (fora da sidebar) */
+section.main label, section.main label p,
+[data-testid="stAppViewContainer"] .main label,
+[data-testid="stAppViewContainer"] .main label p {{
+    color: {TEMA['azul']} !important;
+    font-weight: 500 !important;
+}}
+
 /* Oculta elementos padrão do streamlit */
 #MainMenu, footer {{visibility: hidden;}}
 </style>
